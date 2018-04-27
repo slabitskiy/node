@@ -2,12 +2,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const api = require('./api');
+const expressValidator = require('express-validator');
 
 // Load environment variables from .env file, where API keys and passwords are configured
 dotenv.config({ path: '.env' })
 
 const app = express();
 
+app.use(expressValidator());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
