@@ -1,5 +1,6 @@
 const router = require('express').Router();
 
+const { errorHandler } = require('../helpers');
 const { User } = require('../mock');
 
 router.post('/', (req, res) => {
@@ -32,14 +33,13 @@ router.post('/', (req, res) => {
 	req.getValidationResult()
 		.then(result => {
 			if(!result.isEmpty()) {
-				const message = result.array().map(error => error.msg );
-				res.status(400).send({ message });
-			} else {
-				const userId = User.push({ ...req.body, id: User.length + 1});
-				const userEntity = User.find(user => user.id === userId);
+				return res.status(400).send(errorHandler(result.array()));
+			} 
 
-				res.send(userEntity);				
-			}
+			const userId = User.push({ ...req.body, id: User.length + 1});
+			const userEntity = User.find(user => user.id === userId);
+
+			res.send(userEntity);				
 		})
 });
 
@@ -76,13 +76,12 @@ router.delete('/:id', (req, res) => {
 	req.getValidationResult()
 		.then(result => {
 			if(!result.isEmpty()) {
-				const message = result.array().map(error => error.msg );
-				res.status(400).send({ message });
-			} else {
-				const userEntity = User.splice(userIndex, 1);
+				return res.status(400).send(errorHandler(result.array()));
+			} 
 
-				res.send({ message: `${userEntity[0].email} deleted` });				
-			}
+			const userEntity = User.splice(userIndex, 1);
+
+			res.send({ message: `${userEntity[0].email} deleted` });				
 		});
 });
 
@@ -113,17 +112,13 @@ router.put('/:id', (req, res) => {
 	req.getValidationResult()
 		.then(result => {
 			if(!result.isEmpty()) {
-				const message = result.array().map(error => error.msg );
-				res.status(400).send({ message });
-			} else {
-				const newUser = { ...User[userIndex], ...req.body };
-				const userEntity = User.splice(userIndex, 1, newUser);
-
-
-				console.log(User)
-
-				res.send({ message: `${userEntity[0].email} updated` });				
+				return res.status(400).send(errorHandler(result.array()));
 			}
+
+			const newUser = { ...User[userIndex], ...req.body };
+			const userEntity = User.splice(userIndex, 1, newUser);
+
+			res.send({ message: `${userEntity[0].email} updated` });				
 		});
 });
 
