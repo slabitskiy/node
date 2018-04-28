@@ -32,7 +32,7 @@ router.post('/', (req, res) => {
             const boardEntity = Board.find(board => board.id === boardId);
 
             res.send(boardEntity);				
-		})
+		});
 
 });
 
