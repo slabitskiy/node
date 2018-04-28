@@ -48,27 +48,14 @@ router.get('/', (req, res) => {
 });
 
 router.get('/:id', (req, res) => {
-	req.checkParams('id', 'Id didn\'t provide')
-		.exists()
-		.notEmpty();
-	
-	req.getValidationResult()
-		.then(result => {
-			if(!result.isEmpty()) {
-				const message = result.array().map(error => error.msg );
-				res.status(400).send({ message });
-			} else {
-				const userEntity = User.find(user => user.id === +req.params.id);
+	const userEntity = User.find(user => user.id === +req.params.id);
 
-				if (!userEntity) {
-					res.status(409).send({ message: 'User doesn\'t exist' });
-					return;
-				}
+	if (!userEntity) {
+		res.status(409).send({ message: 'User doesn\'t exist' });
+		return;
+	}
 
-				res.send(userEntity);				
-			}
-		});
-
+	res.send(userEntity);
 });
 
 router.delete('/:id', (req, res) => {

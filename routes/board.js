@@ -1,6 +1,6 @@
 const router = require('express').Router();
 
-const { errorHandler } = require('../utils');
+const { errorHandler, isArrayNumbers} = require('../helpers');
 const { Board } = require('../mock');
 
 router.get('/', (req, res) => {
@@ -19,11 +19,7 @@ router.post('/', (req, res) => {
         .withMessage('Lists doesn\'t exist')
         .isArray()
         .withMessage('Lists should be an array')
-        .custom((value) => {
-            const isNumbers = value.every(el => typeof el === 'number');
-
-            return isNumbers ? value : false;
-        })
+        .custom(isArrayNumbers)
         .withMessage('Values in lists doesn\'t number or string');
 
 	req.getValidationResult()
@@ -41,26 +37,13 @@ router.post('/', (req, res) => {
 });
 
 router.get('/:id', (req, res) => {
-	req.checkParams('id', 'Id didn\'t provide')
-		.exists()
-        .notEmpty();
-        
-    
-	req.getValidationResult()
-    .then(result => {
-        if(!result.isEmpty()) {
-            return res.status(400).send(errorHandler(result.array()));
-        } else {
-            const boardEntity = Board.find(board => board.id === +req.params.id);
+    const boardEntity = Board.find(board => board.id === +req.params.id);
 
-            if (!boardEntity) {
-                return res.status(409).send({ message: 'Board doesn\'t exist' });
-            }
+    if (!boardEntity) {
+        return res.status(409).send({ message: 'Board doesn\'t exist' });
+    }
 
-            res.send(boardEntity);				
-        }
-    });
-
+    res.send(boardEntity);
 });
 
 
@@ -68,9 +51,6 @@ router.delete('/:id', (req, res) => {
     const boardIndex = Board.findIndex(board => board.id === +req.params.id);
 
     req.checkParams('id')
-        .exists()
-        .notEmpty()
-        .withMessage('Id didn\'t provide')
         .custom((value) => {
             if (boardIndex === -1) {
                 return false;
@@ -100,14 +80,10 @@ router.put('/:id', (req, res) => {
 	}
 
 	if (req.body.lists) {
-		req.checkBody('email')
+		req.checkBody('lists')
 			.notEmpty()
 			.withMessage('Lists is empty')
-            .custom((value) => {
-                const isNumbers = value.every(el => typeof el === 'number');
-    
-                return isNumbers ? value : false;
-            })
+            .custom(isArrayNumbers)
             .withMessage('Values in lists doesn\'t number or string');
 	}
 	
