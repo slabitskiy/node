@@ -1,9 +1,7 @@
-const router = require('express').Router();
+const { errorHandler } = require('../../helpers');
+const { User } = require('../../mock');
 
-const { errorHandler } = require('../helpers');
-const { User } = require('../mock');
-
-router.post('/', (req, res) => {
+const postValidation = (req, res, next) => {
 	req.checkBody('name')
 		.exists()
 		.withMessage('Name doesn\'t exist')
@@ -22,11 +20,7 @@ router.post('/', (req, res) => {
 		.custom((value) => {
 			const idx = User.findIndex(user => user.email === value);
 
-			if (idx !== -1) {
-				return false;
-			}
-			
-			return value;
+			return idx !== -1 ? false : value;
 		})
 		.withMessage('User exist');
 
@@ -35,32 +29,14 @@ router.post('/', (req, res) => {
 			if(!result.isEmpty()) {
 				return res.status(400).send(errorHandler(result.array()));
 			} 
+			
+			next();
+		});
+};
 
-			const userId = User.push({ ...req.body, id: User.length + 1});
-			const userEntity = User.find(user => user.id === userId);
-
-			res.send(userEntity);				
-		})
-});
-
-router.get('/', (req, res) => {
-	res.send(User);
-});
-
-router.get('/:id', (req, res) => {
-	const userEntity = User.find(user => user.id === +req.params.id);
-
-	if (!userEntity) {
-		res.status(409).send({ message: 'User doesn\'t exist' });
-		return;
-	}
-
-	res.send(userEntity);
-});
-
-router.delete('/:id', (req, res) => {
-	const userIndex = User.findIndex(user => user.id === +req.params.id);
-
+const deleteValidation = (req, res, next) => {
+	const { userIndex } = req.app.locals;
+    
 	req.checkParams('id')
 		.exists()
 		.notEmpty()
@@ -78,15 +54,17 @@ router.delete('/:id', (req, res) => {
 			if(!result.isEmpty()) {
 				return res.status(400).send(errorHandler(result.array()));
 			} 
-
-			const userEntity = User.splice(userIndex, 1);
-
-			res.send({ message: `${userEntity[0].email} deleted` });				
+			
+			next();
 		});
-});
+};
 
-router.put('/:id', (req, res) => {
-	const userIndex = User.findIndex(user => user.id === +req.params.id);
+const putValidation = (req, res, next) => {
+    const { userIndex } = req.app.locals;
+
+    if (userIndex === -1) {
+        return res.status(400).send(errorHandler('User not found'));
+    }
 
 	if(req.body.name) {
 		req.checkBody('name')
@@ -114,12 +92,13 @@ router.put('/:id', (req, res) => {
 			if(!result.isEmpty()) {
 				return res.status(400).send(errorHandler(result.array()));
 			}
-
-			const newUser = { ...User[userIndex], ...req.body };
-			const userEntity = User.splice(userIndex, 1, newUser);
-
-			res.send({ message: `${userEntity[0].email} updated` });				
+				
+			next();
 		});
-});
+};
 
-module.exports = router;
+module.exports = {
+    postValidation,
+    deleteValidation,
+    putValidation
+};

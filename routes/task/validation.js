@@ -1,20 +1,13 @@
-const router = require('express').Router();
+const { errorHandler, isArrayNumbers, isNumber } = require('../../helpers');
+const { User } = require('../../mock');
 
-const { errorHandler, isArrayNumbers, isNumber } = require('../helpers');
-const { List, Task, User } = require('../mock');
-
-
-router.get('/', (req, res) => {
-    res.send(Task);
-});
-
-router.post('/', (req, res) => {
+const postValidation = (req, res, next) => {
     req.checkBody('title')
         .notEmpty()
         .withMessage('Title is required')
         .isString()
         .withMessage('Title should be a string');
-    
+
     req.checkBody('listId')
         .notEmpty()
         .withMessage('listId is required')
@@ -77,27 +70,14 @@ router.post('/', (req, res) => {
             if(!result.isEmpty()) {
                 return res.status(400).send(errorHandler(result.array()));
             } 
-            
-            const taskId = Task.push({ ...req.body, id: Task.length + 1});
-            const taskEntity = Task.find(task => task.id === taskId);
 
-            res.send(taskEntity);				
+            next();
         });
-});
+};
 
-router.get('/:id', (req, res) => {
-    const taskEntity = Task.find(task => task.id === +req.params.id);
-
-    if (!taskEntity) {
-        return res.status(409).send({ message: 'Task doesn\'t exist' });
-    }
-
-    res.send(taskEntity);
-});
-
-router.delete('/:id', (req, res) => {
-    const taskIndex = Task.findIndex(task => task.id === +req.params.id);
-
+const deleteValidation = (req, res, next) => {
+    const { taskIndex } = req.app.locals;
+    
     req.checkParams('id')
         .custom((value) => {
             if (taskIndex === -1) {
@@ -111,19 +91,21 @@ router.delete('/:id', (req, res) => {
         .then(result => {
             if(!result.isEmpty()) {
                 return res.status(400).send(errorHandler(result.array()));
-            } else {
-                const taskEntity = Task.splice(taskIndex, 1);
-
-                res.send({ message: `${taskEntity[0].title} deleted` });				
             }
-        });
-});
 
-router.put('/:id', (req, res) => {
-    const taskIndex = Task.findIndex(task => task.id === +req.params.id);
+            next();
+        });
+};
+
+const putValidation = (req, res, next) => {
+    const { taskIndex } = req.app.locals;
     
     if (!Object.keys(req.body).length) {
         return res.status(400).send(errorHandler('Body is empty'));
+    }
+
+    if (taskIndex === -1) {
+        return res.status(400).send(errorHandler('Task not found'));
     }
 
     if (req.body.title) {
@@ -198,13 +180,14 @@ router.put('/:id', (req, res) => {
         .then(result => {
             if(!result.isEmpty()) {
                 return res.status(400).send(errorHandler(result.array()));
-            } else {
-				const updatedTask = { ...Task[taskIndex], ...req.body };
-                const taskEntity = Task.splice(taskIndex, 1, updatedTask);
-
-				res.send({ message: `${taskEntity[0].title} updated` });				
             }
-        });
-});
 
-module.exports = router;
+            next();
+        });
+};
+
+module.exports = {
+    postValidation,
+    deleteValidation,
+    putValidation
+};
