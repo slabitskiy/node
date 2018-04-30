@@ -16,13 +16,7 @@ const postValidation = (req, res, next) => {
 		.notEmpty()
 		.withMessage('Email empty')
 		.isEmail()
-		.withMessage('Email not valid')
-		.custom((value) => {
-			const idx = User.findIndex(user => user.email === value);
-
-			return idx !== -1 ? false : value;
-		})
-		.withMessage('User exist');
+		.withMessage('Email not valid');
 
 	req.getValidationResult()
 		.then(result => {
@@ -35,19 +29,10 @@ const postValidation = (req, res, next) => {
 };
 
 const deleteValidation = (req, res, next) => {
-	const { userIndex } = req.app.locals;
-    
 	req.checkParams('id')
 		.exists()
 		.notEmpty()
-		.withMessage('Id didn\'t provide')
-		.custom((value) => {
-			if (userIndex === -1) {
-				return false;
-			}
-			return value;
-		})
-		.withMessage('User not found');
+		.withMessage('Id didn\'t provide');
 
 	req.getValidationResult()
 		.then(result => {
@@ -60,11 +45,6 @@ const deleteValidation = (req, res, next) => {
 };
 
 const putValidation = (req, res, next) => {
-    const { userIndex } = req.app.locals;
-
-    if (userIndex === -1) {
-        return res.status(400).send(errorHandler('User not found'));
-    }
 
 	if(req.body.name) {
 		req.checkBody('name')
@@ -77,15 +57,6 @@ const putValidation = (req, res, next) => {
 			.isEmail()
 			.withMessage('Email not valid');
 	}
-	
-	req.checkParams('id')
-		.custom((value) => {
-			if (userIndex === -1) {
-				return false;
-			}
-			return value;
-		})
-		.withMessage('User not found');
 
 	req.getValidationResult()
 		.then(result => {

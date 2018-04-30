@@ -1,36 +1,49 @@
 const router = require('express').Router();
 
-const { User } = require('../../mock');
-const { postValidation, deleteValidation, putValidation } = require('./validation');
+// const { User } = require('../../mock');
+const { User } = require('../../modules');
+const { postValidation,
+		deleteValidation,
+		putValidation
+	} = require('./validation');
 const { getUser } = require('./middleware');
 
-router.post('/', postValidation, (req, res) => {
-	const userId = User.push({ ...req.body, id: User.length + 1});
-	const userEntity = User.find(user => user.id === userId);
 
-	res.send(userEntity);	
-});
-
-router.get('/', (req, res) => {
-	res.send(User);
-});
-
-router.get('/:id', getUser(), (req, res) => {
-	const { userIndex } = req.app.locals;
-	const userEntity = User[userIndex];
-
-	if (!userEntity) {
-		return res.status(409).send({ message: 'User doesn\'t exist' });	
+router.post('/', postValidation, async (req, res) => {
+	try {
+		const userEntity = await User.create(req.body);
+		return res.send(userEntity);	
+	} catch(err) {
+		res.status(400).send({ message: err.message });
 	}
-
-	res.send(userEntity);
 });
 
-router.delete('/:id', [ getUser(), deleteValidation ], (req, res) => {
-	const { userIndex } = req.app.locals;
-	const userEntity = User.splice(userIndex, 1);
+router.get('/', async (req, res) => {
+	try {
+		const usersList = await User.list();
+		res.send(usersList);
+	} catch(err) {
+		res.status(400).send({ message: err.message });
+	}
+});
 
-	res.send({ message: `${userEntity[0].email} deleted` });	
+router.get('/:id', async (req, res) => {
+	try {
+		const userEntity = await User.getById(req.params.id);
+		res.send(userEntity);
+	} catch(err) {
+		res.status(400).send({ message: err.message });
+	}
+});
+
+router.delete('/:id',  deleteValidation, async (req, res) => {
+	try {
+		const userEntity = await User.deleteById(req.params.id);
+		console.log(userEntity)
+		res.send({ message: `${userEntity[0].email} deleted` });			
+	} catch(err) {
+		res.status(400).send({ message: err.message });
+	}
 });
 
 router.put('/:id', [ getUser(), putValidation ], (req, res) => {
