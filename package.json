@@ -12,6 +12,10 @@
   "author": "Ihor Slabitskyi",
   "license": "ISC",
   "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.11.0",
+    "install-peerdeps": "^1.6.0",
     "nodemon": "^1.17.3"
   },
   "dependencies": {
