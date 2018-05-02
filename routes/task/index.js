@@ -1,45 +1,56 @@
 const router = require('express').Router();
 
-const { List, Task, User } = require('../../mock');
-const { postValidation, deleteValidation, putValidation } = require('./validation');
-const { getTask } = require('./middleware');
+const { Task } = require('../../modules');
+const { postValidation, putValidation } = require('./validation');
 
-router.get('/', (req, res) => {
-    res.send(Task);
+router.get('/', async (req, res) => {
+  try {
+    const tasksList = await Task.list();
+
+    res.send(tasksList);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
 });
 
-router.post('/', postValidation, (req, res) => {
-    const taskId = Task.push({ ...req.body, id: Task.length + 1});
-    const taskEntity = Task.find(task => task.id === taskId);
+router.post('/', postValidation, async (req, res) => {
+  try {
+    const task = await Task.create(req.body);
 
-    res.send(taskEntity);	
+    res.send(task);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
 });
 
-router.get('/:id', getTask(), (req, res) => {
-    const { taskIndex } = req.app.locals;
-    const taskEntity = Task[taskIndex];
-
-    if (!taskEntity) {
-        return res.status(409).send({ message: 'Task doesn\'t exist' });
-    }
+router.get('/:id', async (req, res) => {
+  try {
+    const taskEntity = await Task.getById(req.params.id);
 
     res.send(taskEntity);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
 });
 
-router.delete('/:id', [ getTask(), deleteValidation ], (req, res) => {
-    const { taskIndex } = req.app.locals;
-    
-    const taskEntity = Task.splice(taskIndex, 1);
+router.delete('/:id', async (req, res) => {
+  try {
+    const taskEntity = await Task.deleteById(req.params.id);
 
-    res.send({ message: `${taskEntity[0].title} deleted` });	
+    res.send(taskEntity);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
 });
 
-router.put('/:id', [ getTask(), putValidation ], (req, res) => {
-    const { taskIndex } = req.app.locals;
-    const updatedTask = { ...Task[taskIndex], ...req.body };
-    const taskEntity = Task.splice(taskIndex, 1, updatedTask);
+router.put('/:id', putValidation, async (req, res) => {
+  try {
+    const taskUpdated = await Task.updateById(req.params.id, req.body);
 
-    res.send({ message: `${taskEntity[0].title} updated` });
+    res.send(taskUpdated);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
 });
 
 module.exports = router;

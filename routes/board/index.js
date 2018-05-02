@@ -1,46 +1,56 @@
 const router = require('express').Router();
 
-const { errorHandler, isArrayNumbers} = require('../../helpers');
-const { Board } = require('../../mock');
+const { Board } = require('../../modules');
 
-const { postValidation, deleteValidation, putValidation } = require('./validation');
-const { getBoard } = require('./middleware');
+const { postValidation, putValidation } = require('./validation');
 
-router.get('/', (req, res) => {
-    res.send(Board);
+router.get('/', async (req, res) => {
+  try {
+    const boardEntity = await Board.list();
+    res.send(boardEntity);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
 });
 
-router.post('/', postValidation, (req, res) => {
-	const boardId = Board.push({ ...req.body, id: Board.length + 1});
-	const boardEntity = Board.find(board => board.id === boardId);
-
-	res.send(boardEntity);
-});
-
-router.get('/:id', (req, res) => {
-    const boardEntity = Board.find(board => board.id === +req.params.id);
-
-    if (!boardEntity) {
-        return res.status(409).send({ message: 'Board doesn\'t exist' });
-    }
+router.post('/', postValidation, async (req, res) => {
+  try {
+    const boardEntity = await Board.create(req.body);
 
     res.send(boardEntity);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
+});
+
+router.get('/:id', async (req, res) => {
+  try {
+    const boardEntity = await Board.getById(req.params.id);
+    res.send(boardEntity);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
 });
 
 
-router.delete('/:id', [ getBoard(), deleteValidation ], (req, res) => {
-	const { boardIndex } = req.app.locals;	
-	const boardEntity = Board.splice(boardIndex, 1);
+router.delete('/:id', async (req, res) => {
+  try {
+    const board = await Board.deleteById(req.params.id);
 
-	res.send({ message: `${boardEntity[0].name} deleted` });
+    res.send(board);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
 });
 
-router.put('/:id', [ getBoard(), putValidation ], (req, res) => {
-	const { boardIndex } = req.app.locals;
-	const newBoard = { ...Board[boardIndex], ...req.body };
-	const boardEntity = Board.splice(boardIndex, 1, newBoard);
+router.put('/:id', putValidation, async (req, res) => {
+  try {
+    const board = await Board.updateById(req.params.id, req.body);
 
-	res.send({ message: `${boardEntity[0].name} updated` });
+    res.send(board);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
 });
 
 

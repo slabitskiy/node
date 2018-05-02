@@ -1,47 +1,57 @@
 const router = require('express').Router();
 
-const { List, Board } = require('../../mock');
-const { postValidation, deleteValidation , putValidation} = require('./validation');
-const { getBoard } = require('../board/middleware');
-const { getList } = require('./middleware');
+const { List } = require('../../modules');
+const { postValidation, putValidation } = require('./validation');
 
-router.get('/', (req, res) => {
-    res.send(List);
-});
-
-router.post('/', [ getBoard('boardId'), postValidation ], (req, res) => {    
-    const listId = List.push({ ...req.body, id: List.length + 1});
-    const listEntity = List.find(list => list.id === listId);
-
-    res.send(listEntity);	
-});
-
-router.get('/:id', [ getList() ], (req, res) => {
-    const { listIndex } = req.app.locals;
-    const listEntity = List[listIndex];
-
-    if (!listEntity) {
-        return res.status(409).send({ message: 'Board doesn\'t exist' });
-    }
+router.get('/', async (req, res) => {
+  try {
+    const listEntity = await List.list();
 
     res.send(listEntity);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
+});
+
+router.post('/', postValidation, async (req, res) => {
+  try {
+    const listEntity = await List.create(req.body);
+
+    res.send(listEntity);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
+});
+
+router.get('/:id', async (req, res) => {
+  try {
+    const listEntity = await List.getById(req.params.id);
+
+    res.send(listEntity);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
 });
 
 
-router.delete('/:id', [ getList(), deleteValidation ], (req, res) => {
-    const { listIndex } = req.app.locals;
-    const listEntity = List.splice(listIndex, 1);
+router.delete('/:id', async (req, res) => {
+  try {
+    const listEntity = await List.deleteById(req.params.id);
 
-    res.send({ message: `${listEntity[0].name} deleted` });	
+    res.send(listEntity);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
 });
 
-router.put('/:id', [ getList(), putValidation ], (req, res) => {
-    const listIndex = List.findIndex(list => list.id === +req.params.id);
-    
-    const newList = { ...List[listIndex], ...req.body };
-    const listEntity = List.splice(listIndex, 1, newList);
+router.put('/:id', putValidation, async (req, res) => {
+  try {
+    const listEntity = await List.updateById(req.params.id, req.body);
 
-    res.send({ message: `${listEntity[0].name} updated` });	
+    res.send(listEntity);
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
 });
 
 
