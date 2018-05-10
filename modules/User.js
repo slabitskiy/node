@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { crypt } = require('../helpers');
 
 const scheme = new mongoose.Schema({
   name: {
@@ -10,6 +11,11 @@ const scheme = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  password: {
+    type: String,
+    required: true,
+    select: false,
+  },
 });
 
 scheme.set('toJSON', { versionKey: false });
@@ -17,12 +23,27 @@ scheme.set('toObject', { versionKey: false });
 
 const User = mongoose.model('Users', scheme);
 
+scheme.pre('save', async function (next) {
+  try {
+    if (!this.isModified('password')) return next();
+
+    this.password = await crypt.hashing(this.password);
+    return next();
+  } catch (err) {
+    return next(err);
+  }
+});
+
 const create = async (user) => {
   try {
     const newUser = new User(user);
     const userEntity = await newUser.save();
 
-    return userEntity;
+    return {
+      name: userEntity.name,
+      _id: userEntity._id,
+      email: userEntity.email,
+    };
   } catch (err) {
     throw new Error(err.message);
   }
@@ -31,7 +52,6 @@ const create = async (user) => {
 const list = async () => {
   try {
     const usersList = await User.find().exec();
-
     return usersList;
   } catch (err) {
     throw new Error(err.message);
@@ -72,10 +92,19 @@ const updateById = async (id, user) => {
   }
 };
 
+const findByEmail = async (email, withPassword = false) => {
+  try {
+    return withPassword ? await User.findOne({ email }).select('password email') : await User.findOne({ email });
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   create,
   list,
   getById,
   deleteById,
   updateById,
+  findByEmail,
 };

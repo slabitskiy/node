@@ -17,6 +17,29 @@ const postValidation = (req, res, next) => {
     .isEmail()
     .withMessage('Email not valid');
 
+
+  req.checkBody('password')
+    .exists()
+    .withMessage('Password doesn\'t exist')
+    .notEmpty()
+    .withMessage('Password is empty')
+    .isString()
+    .withMessage('Password should be a string');
+
+  req.checkBody('cpassword')
+    .exists()
+    .withMessage('Password confirmation doesn\'t exist')
+    .notEmpty()
+    .withMessage('Password confirmation is empty')
+    .isString()
+    .withMessage('Password confirmation should be a string')
+    .custom((value) => {
+      if (!req.body.cpassword || !req.body.password) return false;
+
+      return req.body.cpassword !== req.body.password ? false : value;
+    })
+    .withMessage('Password doesn\'t equal confirmation password');
+
   req.getValidationResult()
     .then((result) => {
       if (!result.isEmpty()) {
