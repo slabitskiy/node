@@ -4,10 +4,12 @@ const { list } = require('./types');
 const { task } = require('../task/types');
 const { user } = require('../user/types');
 
+
 const typeDefs = `
     ${user}
     ${task}
     ${list}
+    
     type Query {
         lists: [List]
         listById (id: String!): List
