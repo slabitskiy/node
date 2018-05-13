@@ -16,13 +16,13 @@ const typeDefs = `
     input ListInpt {
         name: String!
         boardId: String!
-        tasks: [Task]
+        tasks: [String]
     }
 
     input ListUpdateInpt {
         name: String
         boardId: String
-        tasks: [Task]
+        tasks: [String]
     }
 
     type Mutation  {
