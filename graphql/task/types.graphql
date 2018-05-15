@@ -1,0 +1,43 @@
+
+  type Task {
+      _id: String
+      title:  String
+      listId: List
+      description: String
+      category: String
+      order: Int
+      author: User
+      assignees: [User]
+  }
+
+  type Query {
+    tasks: [Task]
+      taskById (id: String!): Task
+  }
+
+  input TaskInpt {
+    title:  String!
+    listId: String!
+    description: String
+    category: String!
+    order: Int
+    author: String!
+    assignees: String
+  }
+
+  input TaskUpdateInpt {
+    title:  String
+    listId: String
+    description: String
+    category: String
+    order: Int
+    author: String
+    assignees: String
+  }
+
+  type Mutation  {
+    createTask (task: TaskInpt!): Task
+    updateTask (id: String!, task: TaskUpdateInpt!): Task
+    deleteTask (id: String!): Task
+  }
+

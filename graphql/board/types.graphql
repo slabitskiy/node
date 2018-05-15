@@ -1,0 +1,27 @@
+
+type Board {
+    _id: String
+    name: String!
+    lists: [List]
+}
+
+type Query {
+    boards: [Board]
+    boardById (id: String!): Board
+}
+
+input BoardInp {
+    name: String!
+    lists: [String]
+}
+
+input BoardUpdateInp {
+    name: String
+    lists: [String]
+}
+
+type Mutation  {
+    createBoard (board: BoardInp!): Board
+    updateBoard (id: String!, board: BoardUpdateInp!): Board
+    deleteBoard (id: String!): Board
+}

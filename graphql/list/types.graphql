@@ -1,0 +1,31 @@
+type List {
+    _id: String
+    name: String!
+    boardId: String!
+    tasks: [Task]
+}
+
+type Query {
+    lists: [List]
+    listById (id: String!): List
+}
+
+input ListInpt {
+    name: String!
+    boardId: String!
+    tasks: [String]
+}
+
+input ListUpdateInpt {
+    name: String
+    boardId: String
+    tasks: [String]
+}
+
+type Mutation  {
+    createList (list: ListInpt!): List
+    updateList (id: String!, list: ListUpdateInpt!): List
+    deleteList (id: String!): List
+}
+
+

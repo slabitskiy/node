@@ -1,13 +1,14 @@
 
-const { mergeSchemas } = require('graphql-tools');
+const path = require('path');
+const { fileLoader, mergeTypes, mergeResolvers } = require('merge-graphql-schemas');
+const { makeExecutableSchema } = require('graphql-tools');
 
-const user = require('./user');
-const task = require('./task');
-const list = require('./list');
-const board = require('./board');
+const typesArray = fileLoader(path.join(__dirname, './**/*.graphql'));
+const resolversArray = fileLoader(path.join(__dirname, './**/resolvers.js'));
 
-const schemas = [user, task, list, board];
+const typeDefs = mergeTypes(typesArray, { all: true });
+const resolvers = mergeResolvers(resolversArray);
 
 
-module.exports = mergeSchemas({ schemas });
+module.exports = makeExecutableSchema({ typeDefs, resolvers });
 
